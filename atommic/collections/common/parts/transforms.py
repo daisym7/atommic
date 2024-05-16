@@ -10,6 +10,8 @@ from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple, Union
 import numpy as np
 import torch
 
+import matplotlib.pyplot as plt
+
 from atommic.collections.common.parts.coil_sensitivity_maps import EspiritCalibration
 from atommic.collections.common.parts.fft import fft2, ifft2
 from atommic.collections.common.parts.utils import add_coil_dim_if_singlecoil, apply_mask, center_crop
@@ -2589,6 +2591,22 @@ class MRIDataTransforms:
         )
         attrs["fname"] = fname
         attrs["slice_idx"] = slice_idx
+
+        #############
+        # Check mask
+        # Acceleration based on the mask
+        # check_mask = np.squeeze(mask[0])
+        # a = len(check_mask) / np.count_nonzero(check_mask)
+        # print("acc", a)
+        # # # Show Mask
+        # plot_mask = np.ones(kspace[0, :, :, 0].shape) * np.array(check_mask)
+        # plt.imshow(plot_mask, cmap='gray')
+        # plt.show()
+        # print("kspace", kspace.shape, type(kspace), kspace.dtype)
+        # print("sensitivity map", sensitivity_map.shape, type(sensitivity_map), sensitivity_map.dtype)
+        # print("prediction", prediction[0].shape, type(prediction[0]), prediction[0].dtype)
+        # print("target", target.shape, type(target), target.dtype)
+        #############
 
         return (
             kspace,

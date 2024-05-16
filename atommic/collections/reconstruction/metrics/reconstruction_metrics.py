@@ -4,6 +4,7 @@ __author__ = "Dimitris Karkalousos"
 # Parts of the code have been taken from https://github.com/facebookresearch/fastMRI
 
 import numpy as np
+import torch
 from runstats import Statistics
 from skimage.metrics import peak_signal_noise_ratio, structural_similarity
 
@@ -107,7 +108,8 @@ def psnr(x: np.ndarray, y: np.ndarray, maxval: np.ndarray = None) -> float:
         The PSNR is computed using the scikit-image implementation of the PSNR metric.
         Source: https://scikit-image.org/docs/dev/api/skimage.metrics.html#skimage.metrics.peak_signal_noise_ratio
     """
-    maxval = max(np.max(x) - np.min(x), np.max(y) - np.min(y)) if maxval is None else maxval
+    # maxval = max(np.max(x) - np.min(x), np.max(y) - np.min(y)) if maxval is None else maxval
+    maxval = max(np.max(x) - np.min(x), np.max(y) - np.min(y))
     return peak_signal_noise_ratio(x, y, data_range=maxval)
 
 
@@ -155,8 +157,9 @@ def ssim(x: np.ndarray, y: np.ndarray, maxval: np.ndarray = None) -> float:
     if x.ndim != y.ndim:
         raise ValueError("Ground truth dimensions does not match prediction dimensions.")
 
-    maxval = max(np.max(x) - np.min(x), np.max(y) - np.min(y)) if maxval is None else maxval
-    maxval = max(maxval, 1)
+
+    # maxval = max(np.max(x) - np.min(x), np.max(y) - np.min(y)) if maxval is None else maxval
+    maxval = max(np.max(x) - np.min(x), np.max(y) - np.min(y))
     ssim_score = sum(
         structural_similarity(x[slice_num], y[slice_num], data_range=maxval) for slice_num in range(x.shape[0])
     )

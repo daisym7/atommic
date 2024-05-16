@@ -8,6 +8,8 @@ import numba as nb
 import numpy as np
 import torch
 
+from atommic.collections.common.data.Esaote_powerlaw_mask import GenPDF, GenMask
+
 
 @contextlib.contextmanager
 def temp_seed(rng: np.random, seed: Optional[Union[int, Tuple[int, ...]]]):
@@ -861,6 +863,34 @@ class Random1DMaskFunc(MaskFunc):
         return mask, acceleration
 
 
+class Powerlaw1DMaskFunc(MaskFunc):
+    def __call__(
+            self,
+            shape: Union[Sequence[int], np.ndarray],
+            seed: Optional[Union[int, Tuple[int, ...]]] = None,
+            partial_fourier_percentage: Optional[float] = 0.0,
+            center_scale: Optional[float] = 0.02,
+            **kwargs,
+    ) -> Tuple[torch.Tensor, int]:
+        dims = [1 for _ in shape]
+        self.shape = tuple(shape[-3:-1])
+        dims[-2] = self.shape[-1]
+
+        _, acceleration = self.choose_acceleration()
+        number_lines = int(self.shape[-1]/acceleration)
+        # how many iterations for the point spread function
+        iterations = 1000
+        # tolerance of not getting the exact number of lines
+        tolerance = 0.01
+        # tolerance for asymmetry
+        AsymTolerance = 1
+        # get probability density function of powerlaw
+        pdf = GenPDF(self.shape[-1], acceleration, number_lines)
+        # create mask using the pdf
+        mask = GenMask(pdf, iterations, tolerance, number_lines, AsymTolerance)
+        return torch.from_numpy(mask.reshape(dims).astype(np.float32)), acceleration
+
+
 def create_masker(
     mask_type_str: str, center_fractions: Union[Sequence[float], float], accelerations: Union[Sequence[int], int]
 ) -> MaskFunc:
@@ -914,6 +944,8 @@ def create_masker(
         return Gaussian1DMaskFunc(center_fractions, accelerations)
     if mask_type_str == "gaussian2d":
         return Gaussian2DMaskFunc(center_fractions, accelerations)
+    if mask_type_str == "powerlaw1d":
+        return Powerlaw1DMaskFunc(center_fractions, accelerations)
     if mask_type_str == "poisson2d":
         return Poisson2DMaskFunc(center_fractions, accelerations)
     raise NotImplementedError(f"{mask_type_str} not supported")

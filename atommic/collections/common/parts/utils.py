@@ -152,7 +152,7 @@ def apply_mask(
     shape[:-3] = 1
 
     if existing_mask is None:
-        mask, acc = mask_func(shape, seed, partial_fourier_percentage=partial_fourier_percentage, scale=center_scale)
+        mask, acc = mask_func(shape, seed, partial_fourier_percentage=partial_fourier_percentage, center_scale=center_scale)
     else:
         mask = existing_mask
         acc = mask.size / mask.sum()
