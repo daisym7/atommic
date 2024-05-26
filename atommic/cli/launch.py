@@ -6,6 +6,8 @@ import argparse
 import pytorch_lightning as pl
 import torch
 from omegaconf import DictConfig, OmegaConf
+import wandb
+import os
 
 from atommic.collections.multitask.rs.nn.idslr import IDSLR
 from atommic.collections.multitask.rs.nn.idslr_unet import IDSLRUNet
@@ -66,6 +68,32 @@ def register_cli_subcommand(parser: argparse._SubParsersAction):
     parser_launch.set_defaults(func=main)
 
 
+def log_dataset_in_wandb(name, path):
+    # get file names
+    files = []
+    count = 0
+    for root, _, files in os.walk(path):
+        for file in files:
+            # load in the data
+            if file in files:
+                break
+            files.append(path + file)
+            print(file)
+            count += 1
+            print(count)
+
+    print(files)
+    # save file names in wandb
+    artifact = wandb.Artifact(name, type='dataset')
+    for file_name in files:
+        artifact.add_file(file_name)
+        print("Okay")
+    print("Done")
+    wandb.log_artifact(artifact)
+    print("GELUKT")
+    return
+
+
 @hydra_runner(config_path="../src", config_name="config")
 def main(cfg: DictConfig):  # noqa: MC0001
     """
@@ -82,6 +110,20 @@ def main(cfg: DictConfig):  # noqa: MC0001
 
     trainer = pl.Trainer(**cfg.trainer)
     exp_manager(trainer, cfg.get("exp_manager", None))
+
+    # ######################################
+    # if cfg['mode'] == 'train':
+    #     # print("check", cfg.get('data_path'))
+    #     # print("HCekc ", cfg['pretrained'])
+    #     # print("HCekc ", cfg['exp_manager'].keys())
+    #     log_dataset_in_wandb('Training_files', '/data/projects/esaote/Data_training_CIRIM/Esaote_Trainingset/Knee/2D_Dataset/exp1/Train/')
+    #     # save training files
+    #     log_dataset_in_wandb('Validation_files', '/data/projects/esaote/Data_training_CIRIM/Esaote_Trainingset/Knee/2D_Dataset/exp1/Val/')
+    #     # save training files
+    # else:
+    #     # save training files
+    #     log_dataset_in_wandb('Validation_files')
+    # #######################################
 
     model_name = (cfg.model["model_name"]).upper()
 

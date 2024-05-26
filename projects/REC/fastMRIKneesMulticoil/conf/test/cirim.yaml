@@ -1,5 +1,5 @@
 pretrained: true
-checkpoint: /scratch/dmvandenberg/CIRIM_models_Esaote/Test_Atommic/default/2024-05-15_16-08-29/checkpoints/default--val_loss=0.0283-epoch=100-last.ckpt
+checkpoint: /scratch/dmvandenberg/CIRIM_models_Esaote/Test_Atommic/Spine/default/3x_Powerlaw/checkpoints/default--val_loss=0.0168-epoch=100-last.ckpt
 mode: test
 
 model:
@@ -46,7 +46,8 @@ model:
   accumulate_predictions: true
   dimensionality: 2
   reconstruction_loss:
-    ssim: 1.0
+    l1: 0.1
+    ssim: 0.9
   normalization_type: max
   unnormalize_loss_inputs: false
   unnormalize_log_outputs: false
@@ -66,7 +67,8 @@ model:
   consecutive_slices: 1
 
   test_ds:
-    data_path: /data/projects/esaote/Data_training_CIRIM/Esaote_Trainingset/Knee/2D_Dataset/exp1/Val/
+#    data_path: /data/projects/esaote/Data_training_CIRIM/Esaote_Trainingset/Knee/2D_Dataset/exp1/Val/
+    data_path: /data/projects/esaote/Data_training_CIRIM/Esaote_Trainingset/Spine/Val/
     coil_sensitivity_maps_path: None
     mask_path: None
     noise_path: None
@@ -93,13 +95,13 @@ model:
     coil_combination_method: SENSE
     dimensionality: 2
     mask_args:
-      type: gaussian1d
+      type: powerlaw1d
       accelerations:
         - 3
       center_fractions:
-        - 0.9
-      shift_mask: true
-      center_scale: 0.08
+        - 0.08
+      shift_mask: false
+      center_scale: 0.1
       use_seed: true
     partial_fourier_percentage: 0.0
     remask: false
@@ -153,7 +155,7 @@ trainer:
   max_steps: -1
 
 exp_manager:
-  exp_dir: /scratch/dmvandenberg/CIRIM_models_Esaote/Test_Atommic/
+  exp_dir: /scratch/dmvandenberg/CIRIM_models_Esaote/Test_Atommic/Spine/default/Test/
   ema:
     enable: false
   create_tensorboard_logger: true

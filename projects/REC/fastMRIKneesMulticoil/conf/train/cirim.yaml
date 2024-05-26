@@ -46,7 +46,8 @@ model:
   accumulate_predictions: true
   dimensionality: 2
   reconstruction_loss:
-    ssim: 1.0
+    l1: 0.1
+    ssim: 0.9
   normalization_type: max
   unnormalize_loss_inputs: false
   unnormalize_log_outputs: false
@@ -68,6 +69,7 @@ model:
   train_ds:
 #    data_path: /data/projects/recon/data/public/reconstruction/fastmri/knees/PD/multicoil_train/
     data_path: /data/projects/esaote/Data_training_CIRIM/Esaote_Trainingset/Knee/2D_Dataset/exp1/Train/
+#    data_path: /data/projects/esaote/Data_training_CIRIM/Esaote_Trainingset/Spine/Train/
     coil_sensitivity_maps_path: None
     mask_path: None
     noise_path: None
@@ -95,7 +97,7 @@ model:
     mask_args:
       type: powerlaw1d
       accelerations:
-        - 3
+        - 2.5
       center_fractions:
         - 0.08
       shift_mask: false
@@ -129,6 +131,7 @@ model:
   validation_ds:
 #    data_path: /data/projects/recon/data/public/reconstruction/fastmri/knees/PD/multicoil_val/
     data_path: /data/projects/esaote/Data_training_CIRIM/Esaote_Trainingset/Knee/2D_Dataset/exp1/Val/
+#    data_path: /data/projects/esaote/Data_training_CIRIM/Esaote_Trainingset/Spine/Val/
     coil_sensitivity_maps_path: None
     mask_path: None
     noise_path: None
@@ -157,7 +160,7 @@ model:
     mask_args:
       type: powerlaw1d
       accelerations:
-        - 3
+        - 2.5
       center_fractions:
         - 0.08
       shift_mask: false
@@ -215,7 +218,7 @@ trainer:
   max_steps: -1
 
 exp_manager:
-  exp_dir: /scratch/dmvandenberg/CIRIM_models_Esaote/Test_Atommic/
+  exp_dir: /scratch/dmvandenberg/CIRIM_models_Esaote/Test_Atommic/Spine/
   ema:
     enable: false
   create_tensorboard_logger: false

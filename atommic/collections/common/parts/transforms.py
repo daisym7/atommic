@@ -2606,6 +2606,7 @@ class MRIDataTransforms:
         # print("sensitivity map", sensitivity_map.shape, type(sensitivity_map), sensitivity_map.dtype)
         # print("prediction", prediction[0].shape, type(prediction[0]), prediction[0].dtype)
         # print("target", target.shape, type(target), target.dtype)
+        # print("Deze code wordt gebruikt????")
         #############
 
         return (

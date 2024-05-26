@@ -10,6 +10,8 @@ import torch
 
 from atommic.collections.common.data.Esaote_powerlaw_mask import GenPDF, GenMask
 
+import matplotlib.pyplot as plt
+
 
 @contextlib.contextmanager
 def temp_seed(rng: np.random, seed: Optional[Union[int, Tuple[int, ...]]]):
@@ -373,6 +375,7 @@ class Gaussian1DMaskFunc(MaskFunc):
 
                 check_mask = np.squeeze(mask)
                 found_acc = (len(check_mask)) / np.count_nonzero(check_mask)
+                print(found_acc)
 
                 # don't get stuck in the while loop
                 counter += 1
@@ -967,3 +970,97 @@ def create_masker(
     if mask_type_str == "poisson2d":
         return Poisson2DMaskFunc(center_fractions, accelerations)
     raise NotImplementedError(f"{mask_type_str} not supported")
+
+
+def point_spread_function(masktype, shape, iterations, center_fraction, acceleration, scale_factor):
+    # apply point spread function to find best mask (as least clustered lines as possible)
+    mask_func = create_masker(masktype, [center_fraction], [acceleration])
+    lowest_value = 5
+    for i in range(iterations):
+        # get mask
+        best_mask, best_acc = mask_func([1, shape[0], shape[1], 2], scale=scale_factor)
+        # fft mask
+        mask3 = np.squeeze(best_mask[0])
+        # mask3 = best_mask
+        a = np.fft.fftshift(np.fft.fft(mask3))
+        b = np.abs(a)
+        plt.plot(b)
+        plt.show()
+        # remove center
+        center_frac = 0.08
+        center_lines = int((len(b) * center_frac) / 2)
+        center = np.argmax(b)
+        b[center - center_lines: center] = 0
+        b[center: center + center_lines] = 0
+        plt.plot(b)
+        plt.show()
+        # get highest value other than center
+        c = np.argsort(b)
+        c = b[c]
+        highest_value = c[-1]
+        if highest_value < lowest_value:
+            lowest_value = highest_value
+            mask = best_mask
+            acc = best_acc
+    return mask, acc
+
+
+def average_acceleration(masktype, center_fraction, acceleration, scale_factor):
+    average = 0
+    for i in range(1000):
+        mask_func = create_masker(masktype, [center_fraction], [acceleration])
+        mask = mask_func([224, 224, 2], center_scale=scale_factor)
+        # # Acceleration based on the mask
+        mask3 = np.squeeze(mask[0])
+        a = len(mask3) / np.count_nonzero(mask3)
+        average += a
+    print("average a:", average/1000)
+    return
+
+
+def find_mask_with_right_acceleration(masktype, center_fraction, acceleration, scale_factor):
+    for i in range(1000):
+        found_acc = 100
+        count = 0
+        acceleration = 3
+        while np.abs(found_acc - acceleration) > 0.05:
+            # print(found_acc, acceleration)
+            mask_func = create_masker(masktype, [center_fraction], [acceleration])
+            mask, acc = mask_func([1, 192, 192, 2], scale=scale_factor)
+            mask3 = np.squeeze(mask)
+            found_acc = len(mask3) / np.count_nonzero(mask3)
+            # print(found_acc)
+            count += 1
+            if count > 5000:
+                raise ValueError(f'Generating mask failed in while loop. Try again.')
+    print("found acc: ", found_acc)
+    print(count)
+    return mask, found_acc
+
+
+if __name__ == "__main__":
+    masktype = "gaussian1d"
+    center_fraction = 0.9
+    acceleration = 3
+    scale_factor = 0.08
+    shape = (224,224)
+
+    average_acceleration(masktype, center_fraction, acceleration, scale_factor)
+
+    # use point spread function to find the best mask
+    # iterations = 10
+    # final_mask, acc = point_spread_function(masktype, shape, iterations, center_fraction, acceleration, scale_factor)
+
+    mask_func = create_masker(masktype, [center_fraction], [acceleration])
+    # for i in range(10000):
+    #     final_mask, acc = mask_func([1, shape[0], shape[1], 2], scale=scale_factor)
+    final_mask, acc = mask_func([shape[0], shape[1], 2], center_scale=scale_factor)
+    final_mask = np.squeeze(final_mask)
+    # print(final_mask.shape)
+    acc = 20160 / np.count_nonzero(final_mask)
+    print("Acceleration of mask", acc)
+    mask6 = np.ones((shape[0], shape[1])) * np.array(final_mask)
+
+    # mask6 = np.fft.fftshift(mask6)
+    plt.imshow(mask6, cmap='gray')
+    plt.show()
